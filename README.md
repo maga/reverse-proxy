@@ -135,3 +135,10 @@ Evaluation Criteria
 ---
 
 Good luck!
+
+Implementation
+==============
+
+Code organisation
+----------
+https://github.com/golang-standards/project-layout
