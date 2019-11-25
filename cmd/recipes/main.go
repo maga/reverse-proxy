@@ -1,22 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/hellofreshdevtests/maga-golang-test/internal/domains"
-	"github.com/hellofreshdevtests/maga-golang-test/internal/handlers"
-	"github.com/hellofreshdevtests/maga-golang-test/internal/repository"
+	"github.com/hellofreshdevtests/maga-golang-test/internal/handlers/recipes"
 )
 
 func main() {
-	repo := "https://s3-eu-west-1.amazonaws.com/test-golang-recipes/"
+	repo, _ := url.Parse(os.Getenv("RECIPES_REPOSITORY"))
 
 	recipesAdapter := domains.NewRecipesAdapter(repo)
 
 	appPort := os.Getenv("APP_PORT")
+
 	log.Printf("Starting Proxy Server on port %s ...", appPort)
 
 	http.HandleFunc("/recipes", handlers.NewRecipesHandler(recipesAdapter))

@@ -1,37 +1,57 @@
 package handlers
 
 import (
-	"http"
+	"encoding/json"
+	"log"
+	"net/http"
+	"strings"
+
+	"github.com/hellofreshdevtests/maga-golang-test/internal/domains"
 )
 
 // closure for returned function that handles the request
 func NewRecipesHandler(recipesAdapter domains.RecipesAdapter) http.HandlerFunc {
-	if req.Method != "GET" {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		recipes, err := recipesHandler(req, companiesAdapter)
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// Return recipes slice as a JSON response
-		w.Header().Add("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		w.Write(recipes)
+
+		recipesHandler(w, r, recipesAdapter)
 	}
 }
 
-func recipesHandler(request *http.Request, companiesAdapter domains.CompaniesAdapter) (types.Response, error) {
-	idParam := r.URL.Query()["ids"]
-	//Check if "ids" are passed as query parameters
-	if idParam != nil {
-		ids := strings.Split(idParam[0], ",")
-		h.getRecipesByIds(w, r, ids)
+func recipesHandler(w http.ResponseWriter, r *http.Request, adapter domains.RecipesAdapter) {
+	queryIds := r.URL.Query()["ids"]
+	var err error
+	var recipes []domains.Recipe
+
+	if queryIds != nil {
+		ids := strings.Split(queryIds[0], ",")
+		recipes, err = adapter.FetchByIds(ids)
 	} else {
-		h.getAllRecipes(w, r)
+		recipes, err = adapter.FetchAll()
 	}
+
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusBadRequest)
+
+		return
+	}
+
+	json, err := json.Marshal(recipes)
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusBadRequest)
+
+		return
+	}
+
+	// Return recipes in JSON
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(json)
 }
