@@ -1,7 +1,8 @@
 vendor/
 
-\.DS_Store
+.DS_Store
 
-**/*
 !**/*.go
-!**/
+
+main
+bin

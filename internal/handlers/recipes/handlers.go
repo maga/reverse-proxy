@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
+	// "strings"
 
 	"github.com/hellofreshdevtests/maga-golang-test/internal/domains"
 )
@@ -24,15 +24,15 @@ func NewRecipesHandler(recipesAdapter domains.RecipesAdapter) http.HandlerFunc {
 }
 
 func recipesHandler(w http.ResponseWriter, r *http.Request, adapter domains.RecipesAdapter) {
-	queryIds := r.URL.Query()["ids"]
+	requestIds := r.URL.Query()["ids"]
 	var err error
-	var recipes []domains.Recipe
+	var recipes []*domains.Recipe
 
-	if queryIds != nil {
-		ids := strings.Split(queryIds[0], ",")
-		recipes, err = adapter.FetchByIds(ids)
+	if requestIds != nil {
+		// ids := strings.Split(requestIds[0], ",")
+		// recipes, err = adapter.FetchByIds(r, ids)
 	} else {
-		recipes, err = adapter.FetchAll()
+		recipes, err = adapter.FetchAll(r)
 	}
 
 	if err != nil {
