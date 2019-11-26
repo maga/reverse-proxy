@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	// "log"
 	// "net/http"
 	// "net/http/httptest"
 	// "os"
@@ -16,8 +16,6 @@ import (
 func TestFetchRecipeById(t *testing.T) {
 	id := 1
 	expected := seedRecipeJSON(id)
-
-	log.Println(expected.Id)
 
 	res, err := fetchRecipeById(id)
 	if err != nil {
@@ -43,4 +41,24 @@ func seedRecipeJSON(id int) Recipe {
 	json.Unmarshal(byteVal, &recipe)
 
 	return recipe
+}
+
+func TestSort(t *testing.T) {
+	recipes := []*Recipe{
+		&Recipe{Id: "1", PrepTime: "PT5M"},
+		&Recipe{Id: "2", PrepTime: "PT4M"},
+		&Recipe{Id: "3", PrepTime: "PT2-3M"},
+		&Recipe{Id: "4", PrepTime: "PT1M"},
+		&Recipe{Id: "5", PrepTime: ""},
+	}
+
+	Sort(recipes)
+
+	expected := []string{"4", "3", "2", "1", "5"}
+
+	for i, recipe := range recipes {
+		if recipe.Id != expected[i] {
+			t.Errorf("Recipe is sorted wrongly, got: %s, want: %s.", recipe.Id, expected[i])
+		}
+	}
 }

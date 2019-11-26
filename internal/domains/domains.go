@@ -52,7 +52,7 @@ func NewRecipesAdapter(repo *url.URL) RecipesAdapter {
 
 func Sort(recipes []*Recipe) {
 	sort.Slice(recipes, func(i, j int) bool {
-		//If the prep. time is zero, than push the recipe to the end of slice
+		//If the prep. time is zero, push the recipe to the end of slice
 		if recipes[i].PrepTime == "" {
 			return false
 		}
@@ -66,15 +66,17 @@ func Sort(recipes []*Recipe) {
 		si := prepTimeRegExp.FindStringSubmatch(recipes[i].PrepTime)
 		sj := prepTimeRegExp.FindStringSubmatch(recipes[j].PrepTime)
 
-		// Convert to minutes and compare the values
+		// Extracting mins from the list got above
 		ti, err := strconv.Atoi(si[1])
 		if err != nil {
 			return false
 		}
+
 		tj, err := strconv.Atoi(sj[1])
 		if err != nil {
 			return true
 		}
+
 		return ti < tj
 	})
 }
@@ -209,14 +211,11 @@ func fetchRecipesList(ids []int) ([]*Recipe, error) {
 func fetchRecipeById(id int) (*Recipe, error) {
 	url := fmt.Sprintf("%s/%d", os.Getenv("RECIPES_REPOSITORY"), id)
 
-	// Commented it to let test pass
-	// client := http.Client{
-	// 	Timeout: time.Duration(1 * time.Second),
-	// }
-	//
-	// resp, err := client.Get(url)
+	client := http.Client{
+		Timeout: time.Duration(1 * time.Second),
+	}
 
-	resp, err := http.Get(url)
+	resp, err := client.Get(url)
 	if err != nil {
 		fmt.Errorf("Error requesting recipe %d : %v", id, err)
 		return nil, err
