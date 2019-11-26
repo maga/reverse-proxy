@@ -12,6 +12,6 @@ docker-build:
 clean:
 	rm -rf ./bin ./vendor
 
-test-domains:
+test:
 	env `cat .env` go test -v internal/domains/*
 

@@ -23,7 +23,6 @@ func NewRecipesHandler(recipesAdapter domains.RecipesAdapter) http.HandlerFunc {
 }
 
 func recipesHandler(w http.ResponseWriter, r *http.Request, adapter domains.RecipesAdapter) {
-	requestIds := r.URL.Query()["ids"]
 	var err error
 	var recipes []*domains.Recipe
 

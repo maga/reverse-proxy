@@ -39,8 +39,7 @@ type Ingredient struct {
 
 // RecipesAdapter is the recipes repository.
 type RecipesAdapter interface {
-	FetchAll(req *http.Request) ([]*Recipe, error)
-	FetchByIds(req *http.Request, ids []string) ([]*Recipe, error)
+	FetchRecipes(req *http.Request) ([]*Recipe, error)
 }
 
 // NewRecipesAdapter creates a new repository instance.
@@ -50,41 +49,10 @@ func NewRecipesAdapter(repo *url.URL) RecipesAdapter {
 	}
 }
 
-func Sort(recipes []*Recipe) {
-	sort.Slice(recipes, func(i, j int) bool {
-		//If the prep. time is zero, push the recipe to the end of slice
-		if recipes[i].PrepTime == "" {
-			return false
-		}
-		if recipes[j].PrepTime == "" {
-			return true
-		}
-
-		// RegExp to parse preparation time
-		prepTimeRegExp := regexp.MustCompile(`^PT(\d+).*M$`)
-
-		si := prepTimeRegExp.FindStringSubmatch(recipes[i].PrepTime)
-		sj := prepTimeRegExp.FindStringSubmatch(recipes[j].PrepTime)
-
-		// Extracting mins from the list got above
-		ti, err := strconv.Atoi(si[1])
-		if err != nil {
-			return false
-		}
-
-		tj, err := strconv.Atoi(sj[1])
-		if err != nil {
-			return true
-		}
-
-		return ti < tj
-	})
-}
-
-func (ra recipesAdapter) FetchAll(req *http.Request) ([]*Recipe, error) {
-	skip := ra.getSkipParam(req)
-	top := ra.getTopParam(req)
-	ids := ra.getIdsParam(req)
+func (ra recipesAdapter) FetchRecipes(req *http.Request) ([]*Recipe, error) {
+	skip := getSkipParam(req)
+	top := getTopParam(req)
+	ids := getIdsParam(req)
 
 	if len(ids) == 0 {
 		for i := skip + 1; i <= skip+top; i++ {
@@ -93,7 +61,7 @@ func (ra recipesAdapter) FetchAll(req *http.Request) ([]*Recipe, error) {
 	}
 
 	var recipes = []*Recipe{}
-	recipes, err := fetchRecipesList(ids)
+	recipes, err := fetchRecipesByIds(ids)
 	if err != nil {
 		fmt.Errorf("Error occured while requesting recipes by ids : [%v]", ids)
 	}
@@ -105,59 +73,7 @@ func (ra recipesAdapter) FetchAll(req *http.Request) ([]*Recipe, error) {
 	return recipes, nil
 }
 
-func (ra recipesAdapter) FetchByIds(req *http.Request, ids []string) ([]*Recipe, error) {
-	return []*Recipe{}, nil
-}
-
-func (ra recipesAdapter) getSkipParam(req *http.Request) int {
-	defaultSkip, _ := strconv.Atoi(os.Getenv("DEFAULT_SKIP"))
-	skipVal := defaultSkip
-
-	skipKeys, ok := ra.Repo.Query()["skip"]
-	if ok || len(skipKeys) > 0 {
-		if skip, err := strconv.Atoi(skipKeys[0]); err == nil {
-			skipVal = skip
-		}
-	}
-
-	return skipVal
-}
-
-func (ra recipesAdapter) getTopParam(req *http.Request) int {
-	defaultTop, _ := strconv.Atoi(os.Getenv("DEFAULT_TOP"))
-	topVal := defaultTop
-
-	topKeys, ok := ra.Repo.Query()["top"]
-	if ok || len(topKeys) > 0 {
-		if top, err := strconv.Atoi(topKeys[0]); err == nil {
-			topVal = top
-		}
-	}
-
-	return topVal
-}
-
-func (ra recipesAdapter) getIdsParam(req *http.Request) []int {
-	ids, ok := ra.Repo.Query()["ids"]
-	if !ok || len(ids[0]) < 1 {
-		return []int{}
-	}
-
-	arr := []int{}
-	vals := strings.Split(ids[0], ",")
-
-	for _, v := range vals {
-		id, err := strconv.Atoi(v)
-		if err != nil {
-			continue
-		}
-		arr = append(arr, id)
-	}
-
-	return arr
-}
-
-func fetchRecipesList(ids []int) ([]*Recipe, error) {
+func fetchRecipesByIds(ids []int) ([]*Recipe, error) {
 	concurrencyLimit, _ := strconv.Atoi(os.Getenv("CONCURRENCY_LIMIT"))
 
 	// creating bounded channel to limit concurrent calls
@@ -243,4 +159,83 @@ func fetchRecipeById(id int) (*Recipe, error) {
 	}
 
 	return recipe, nil
+}
+
+func Sort(recipes []*Recipe) {
+	sort.Slice(recipes, func(i, j int) bool {
+		//If the prep. time is zero, push the recipe to the end of slice
+		if recipes[i].PrepTime == "" {
+			return false
+		}
+		if recipes[j].PrepTime == "" {
+			return true
+		}
+
+		// RegExp to parse preparation time
+		prepTimeRegExp := regexp.MustCompile(`^PT(\d+).*M$`)
+
+		si := prepTimeRegExp.FindStringSubmatch(recipes[i].PrepTime)
+		sj := prepTimeRegExp.FindStringSubmatch(recipes[j].PrepTime)
+
+		// Extracting mins from the list got above
+		ti, err := strconv.Atoi(si[1])
+		if err != nil {
+			return false
+		}
+
+		tj, err := strconv.Atoi(sj[1])
+		if err != nil {
+			return true
+		}
+
+		return ti < tj
+	})
+}
+
+func getTopParam(req *http.Request) int {
+	defaultTop, _ := strconv.Atoi(os.Getenv("DEFAULT_TOP"))
+	topVal := defaultTop
+
+	topKeys, ok := req.URL.Query()["top"]
+	if ok || len(topKeys) > 0 {
+		if top, err := strconv.Atoi(topKeys[0]); err == nil {
+			topVal = top
+		}
+	}
+
+	return topVal
+}
+
+func getIdsParam(req *http.Request) []int {
+	ids, ok := req.URL.Query()["ids"]
+	if !ok || len(ids[0]) < 1 {
+		return []int{}
+	}
+
+	arr := []int{}
+	vals := strings.Split(ids[0], ",")
+
+	for _, v := range vals {
+		id, err := strconv.Atoi(v)
+		if err != nil {
+			continue
+		}
+		arr = append(arr, id)
+	}
+
+	return arr
+}
+
+func getSkipParam(req *http.Request) int {
+	defaultSkip, _ := strconv.Atoi(os.Getenv("DEFAULT_SKIP"))
+	skipVal := defaultSkip
+
+	skipKeys, ok := req.URL.Query()["skip"]
+	if ok || len(skipKeys) > 0 {
+		if skip, err := strconv.Atoi(skipKeys[0]); err == nil {
+			skipVal = skip
+		}
+	}
+
+	return skipVal
 }
