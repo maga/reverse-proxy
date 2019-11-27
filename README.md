@@ -138,7 +138,48 @@ Good luck!
 
 Implementation
 ==============
+Used zero external libs
 
-Code organisation
-----------
-https://github.com/golang-standards/project-layout
+## Code organisation
+
+Directories structure is following https://github.com/golang-standards/project-layout
+
+## Prerequisite
+
+* Go >= 1.13
+
+## Run
+Default listening URL: localhost:8080
+
+### Local
+```make run
+```
+### Docker
+To be fixed...
+
+## Build
+
+### Local
+```make build
+```
+
+### Docker
+To be fixed...
+
+## Test
+```make test
+```
+
+### Default configs
+* TOP=100
+* SKIP=0
+* REQUEST_TIMEOUT_MILLISEC=1000 ... to be extracted from hardcode
+* CONCURRENCY_LIMIT=10
+
+### TODO
+* Docker: to finish a battle on Mac
+* Refactoring: decouple domain helpers
+* Testing: integration test of the recipesHandler and consider using the assert lib
+* Logger!
+
+

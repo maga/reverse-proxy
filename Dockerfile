@@ -1,19 +1,23 @@
-FROM golang:latest as builder
-WORKDIR /app
+# Prepare
+FROM golang:1.13-alpine as baseimg
 
-COPY . .
+RUN apk --no-cache upgrade && apk --no-cache add git make
 
-RUN make build
+# First only download the dependencies, so thid layer can be cahced before we copy the code
+COPY ./go.mod ./go.sum ./Makefile /app/
+WORKDIR /app/
 
-FROM alpine:latest
+# Build
+FROM baseimg as builder
 
 COPY . ./
 RUN make build
 
-FROM alpine:latest
+# Run
+FROM alpine
 
-WORKDIR /app
-COPY --from=builder /app/main .
-
-CMD ./main
+COPY --from=builder /app/maga-golang-test /opt/
+WORKDIR /opt/
+ARG ENV
 EXPOSE 8080
+CMD ["./maga-golang-test"]
