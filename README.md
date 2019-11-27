@@ -152,7 +152,8 @@ Directories structure is following https://github.com/golang-standards/project-l
 Default listening URL: localhost:8080
 
 ### Local
-```make run
+```
+make run
 ```
 ### Docker
 To be fixed...
@@ -160,14 +161,16 @@ To be fixed...
 ## Build
 
 ### Local
-```make build
+```
+make build
 ```
 
 ### Docker
 To be fixed...
 
 ## Test
-```make test
+```
+make test
 ```
 
 ### Default configs
