@@ -1,23 +1,19 @@
-# Prepare
-FROM golang:1.13-alpine as baseimg
+FROM golang:1.13.4-alpine
 
-RUN apk --no-cache upgrade && apk --no-cache add git make
+# Set the Current Working Directory inside the container
+WORKDIR /app
 
-# First only download the dependencies, so thid layer can be cahced before we copy the code
-COPY ./go.mod ./go.sum ./Makefile /app/
-WORKDIR /app/
+# Copy go mod and sum files
+COPY go.mod go.sum ./
 
-# Build
-FROM baseimg as builder
+# Copy the source from the current directory to the Working Directory inside the container
+COPY . .
 
-COPY . ./
-RUN make build
+# Build the Go app
+RUN go build cmd/recipes/main.go
 
-# Run
-FROM alpine
-
-COPY --from=builder /app/maga-golang-test /opt/
-WORKDIR /opt/
-ARG ENV
+# Expose port 8080 to the outside world
 EXPOSE 8080
-CMD ["./maga-golang-test"]
+
+# Run the executable
+CMD ./main

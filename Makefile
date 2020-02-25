@@ -6,7 +6,7 @@ run:
 build:
 	export GO111MODULE=on
 	mkdir -p bin/recipes
-	env GOOS=linux go build -ldflags="-s -w" -o bin/services/resipes cmd/recipes/main.go
+	env GOOS=linux go build -ldflags="-s -w" -o bin/recipes cmd/recipes/main.go
 
 clean:
 	rm -rf ./bin ./vendor
